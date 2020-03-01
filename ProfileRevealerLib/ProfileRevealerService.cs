@@ -28,6 +28,9 @@ namespace ProfileRevealerLib {
 		private ModulePopup? focusedModulePopup;
 		private Component? tweaksService;
 
+		private FieldInfo? tweaksSettingsField;
+		private FieldInfo? tweaksDisableAdvantageousField;
+
 		public void Start() {
 			this.AdvantageousWarningCanvas.SetActive(false);
 
@@ -113,20 +116,39 @@ namespace ProfileRevealerLib {
 		}
 
 		private void RefreshConfig() {
+			bool rewriteFile;
 			try {
 				this.config = JsonConvert.DeserializeObject<Config>(this.KMModSettings.Settings);
 				if (this.config != null) {
 					// Make sure that the config file uses the current format; otherwise the Tweaks settings page does not initialise properly.
 					var dictionary = JsonConvert.DeserializeObject<IDictionary<string, object>>(this.KMModSettings.Settings);
-					if (dictionary.ContainsKey(nameof(Config.PopupKeys))) return;
-				} else this.config = new Config();
+					rewriteFile = !dictionary.ContainsKey(nameof(Config.PopupKeys));
+				} else {
+					this.config = new Config();
+					rewriteFile = true;
+				}
 			} catch (JsonSerializationException ex) {
 				Debug.LogError("[Profile Revealer] The mod settings file is invalid.");
 				Debug.LogException(ex, this);
 				this.config = new Config();
+				rewriteFile = true;
 			}
-			using var writer2 = new StreamWriter(this.KMModSettings.SettingsPath);
-			new JsonSerializer() { Formatting = Formatting.Indented }.Serialize(writer2, this.config);
+			if (rewriteFile) {
+				using var writer2 = new StreamWriter(this.KMModSettings.SettingsPath);
+				new JsonSerializer() { Formatting = Formatting.Indented }.Serialize(writer2, this.config);
+			}
+			// Respect Disable Advantageous Features in Tweaks.
+			if (this.config.ShowModuleNames && this.tweaksService != null) {
+				if (this.tweaksSettingsField == null)
+					this.tweaksSettingsField = this.tweaksService.GetType().GetField("settings", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+				var tweaksSettings = this.tweaksSettingsField.GetValue(null);
+				if (this.tweaksDisableAdvantageousField == null)
+					this.tweaksDisableAdvantageousField = tweaksSettings.GetType().GetField("DisableAdvantageous", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				if ((bool) this.tweaksDisableAdvantageousField.GetValue(tweaksSettings)) {
+					Debug.LogWarning("[Profile Revealer] Advantageous features are disabled in Tweaks settings. Overriding Show Module Names setting.");
+					this.config.ShowModuleNames = false;
+				}
+			}
 		}
 
 		private IEnumerator ShowAdvantageousWarning() {
