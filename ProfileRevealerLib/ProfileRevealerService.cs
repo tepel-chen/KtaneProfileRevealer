@@ -19,10 +19,12 @@ namespace ProfileRevealerLib {
 
 		private KMModSettings KMModSettings;
 		private KMGameInfo KMGameInfo;
+		private KMGamepad KMGamepad;
 		private Config config;
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
 		private KMGameInfo.State gameState;
-		private ModulePopup? currentPopup;
+		private ModulePopup? highlightedModulePopup;
+		private ModulePopup? focusedModulePopup;
 		private Component? tweaksService;
 
 		public void Start() {
@@ -30,6 +32,7 @@ namespace ProfileRevealerLib {
 
 			this.KMGameInfo = this.GetComponent<KMGameInfo>();
 			this.KMModSettings = this.GetComponent<KMModSettings>();
+			this.KMGamepad = this.GetComponent<KMGamepad>();
 
 			if (Application.isEditor) {
 				this.config = new Config { ShowModuleNames = true };
@@ -40,9 +43,36 @@ namespace ProfileRevealerLib {
 			}
 		}
 
+		private bool prevPressed;
 		public void Update() {
-			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null && this.currentPopup != null && Input.GetKeyDown(this.config.PopupKey))
-				this.currentPopup.Show();
+			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null) {
+				bool pressed;
+				if (this.config.PopupKey != 0) {
+					pressed = Input.GetKeyDown(this.config.PopupKey) && (this.config.PopupKeyModifiers == 0 || (
+						((this.config.PopupKeyModifiers & ModifierKeys.Shift) == 0 || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) &&
+						((this.config.PopupKeyModifiers & ModifierKeys.Ctrl) == 0 || Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) &&
+						((this.config.PopupKeyModifiers & ModifierKeys.Alt) == 0 || Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) &&
+						((this.config.PopupKeyModifiers & ModifierKeys.Command) == 0 || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) &&
+						((this.config.PopupKeyModifiers & ModifierKeys.Super) == 0 || Input.GetKey(KeyCode.LeftWindows) || Input.GetKey(KeyCode.RightWindows))));
+				} else if (this.config.PopupButton >= 0) {
+					pressed = this.KMGamepad.GetButtonDown(this.config.PopupButton);
+				} else {
+					pressed = this.KMGamepad.GetAxisValue(this.config.PopupAxis) > 0.75f;
+					if (this.prevPressed) {
+						if (!pressed) this.prevPressed = false;
+						pressed = false;
+					} else
+						this.prevPressed = pressed;
+				}
+				if (pressed) {
+					ModulePopup popup;
+					if (this.highlightedModulePopup != null) popup = this.highlightedModulePopup;
+					else if (this.focusedModulePopup != null) popup = this.focusedModulePopup;
+					else return;
+					if (popup.Visible) popup.Hide();
+					else popup.Show();
+				}
+			}
 		}
 
 		private void KMGameInfo_OnStateChange(KMGameInfo.State state) {
@@ -78,14 +108,18 @@ namespace ProfileRevealerLib {
 		private void RefreshConfig() {
 			try {
 				this.config = JsonConvert.DeserializeObject<Config>(this.KMModSettings.Settings);
-				if (this.config != null) return;
+				if (this.config != null) {
+					// Make sure that the config file uses the current format; otherwise the Tweaks settings page does not initialise properly.
+					var dictionary = JsonConvert.DeserializeObject<IDictionary<string, object>>(this.KMModSettings.Settings);
+					if (dictionary.ContainsKey(nameof(Config.PopupKeys))) return;
+				} else this.config = new Config();
 			} catch (JsonSerializationException ex) {
 				Debug.LogError("[Profile Revealer] The mod settings file is invalid.");
 				Debug.LogException(ex, this);
+				this.config = new Config();
 			}
-			this.config = new Config();
-			using var writer = new StreamWriter(this.KMModSettings.SettingsPath);
-			new JsonSerializer() { Formatting = Formatting.Indented }.Serialize(writer, this.config);
+			using var writer2 = new StreamWriter(this.KMModSettings.SettingsPath);
+			new JsonSerializer() { Formatting = Formatting.Indented }.Serialize(writer2, this.config);
 		}
 
 		private IEnumerator ShowAdvantageousWarning() {
@@ -188,8 +222,10 @@ namespace ProfileRevealerLib {
 						}
 						popup.transform.SetParent(component.transform.parent, true);
 						var selectable = component.GetComponent<Selectable>();
-						selectable.OnHighlight += () => { this.currentPopup = popup; popup.StartAnimation(); };
-						selectable.OnHighlightEnded += () => { if (this.currentPopup == popup) this.currentPopup = null; popup.StopAnimation(); };
+						selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
+						selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
+						selectable.OnFocus += () => { this.focusedModulePopup = popup; popup.Hide(); };
+						selectable.OnDefocus += () => { if (this.focusedModulePopup == popup) this.focusedModulePopup = null; popup.Hide(); };
 					}
 					oldBombs.Add(bomb);
 				}
@@ -231,8 +267,10 @@ namespace ProfileRevealerLib {
 					popup.inactiveProfiles = new[] { "Veto A", "Veto B" };
 					popup.transform.SetParent(transform.parent, true);
 					var selectable = transform.GetComponent<KMSelectable>();
-					selectable.OnHighlight += () => { this.currentPopup = popup; popup.StartAnimation(); };
-					selectable.OnHighlightEnded += () => { if (this.currentPopup == popup) this.currentPopup = null; popup.StopAnimation(); };
+					selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
+					selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
+					selectable.OnFocus += () => { this.focusedModulePopup = popup; popup.Hide(); };
+					selectable.OnDefocus += () => { if (this.focusedModulePopup == popup) this.focusedModulePopup = null; popup.Hide(); };
 				}
 			}
 			yield break;

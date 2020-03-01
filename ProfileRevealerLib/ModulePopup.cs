@@ -10,6 +10,9 @@ namespace ProfileRevealerLib {
 	public class ModulePopup : MonoBehaviour {
 		public GameObject Canvas;
 		public Text Text;
+
+		public bool Visible => this.Canvas.activeSelf;
+
 		public float Delay { get; set; }
 		internal string moduleName;
 		internal IEnumerable<string> enabledProfiles;
@@ -46,26 +49,26 @@ namespace ProfileRevealerLib {
 			return builder.ToString();
 		}
 
-		public void StartAnimation() {
+		public void ShowDelayed() {
 			if (this.coroutine != null) this.StopCoroutine(this.coroutine);
-			this.coroutine = this.StartCoroutine(this.AnimateCoroutine());
-		}
-
-		public void StopAnimation() {
-			if (this.coroutine != null) this.StopCoroutine(this.coroutine);
-			this.coroutine = null;
-			this.Canvas.SetActive(false);
-		}
-
-		private IEnumerator AnimateCoroutine() {
-			if (this.Delay < 0 || float.IsInfinity(this.Delay)) yield break;
-			yield return new WaitForSeconds(this.Delay);
-			this.Canvas.SetActive(true);
+			this.coroutine = this.StartCoroutine(this.DelayCoroutine());
 		}
 
 		public void Show() {
 			if (this.coroutine != null) this.StopCoroutine(this.coroutine);
 			this.coroutine = null;
+			this.Canvas.SetActive(true);
+		}
+
+		public void Hide() {
+			if (this.coroutine != null) this.StopCoroutine(this.coroutine);
+			this.coroutine = null;
+			this.Canvas.SetActive(false);
+		}
+
+		private IEnumerator DelayCoroutine() {
+			if (this.Delay < 0 || float.IsInfinity(this.Delay) || float.IsNaN(this.Delay)) yield break;
+			yield return new WaitForSeconds(this.Delay);
 			this.Canvas.SetActive(true);
 		}
 	}

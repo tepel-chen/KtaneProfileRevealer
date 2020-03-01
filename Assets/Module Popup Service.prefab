@@ -57,6 +57,7 @@ GameObject:
   - component: {fileID: 114256058979433768}
   - component: {fileID: 114807003793558702}
   - component: {fileID: 114887141543855098}
+  - component: {fileID: 114410048241445114}
   m_Layer: 0
   m_Name: Module Popup Service
   m_TagString: Untagged
@@ -130,6 +131,17 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
+--- !u!114 &114410048241445114
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1934000079390978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1901918731, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114567803402070292
 MonoBehaviour:
   m_ObjectHideFlags: 1
