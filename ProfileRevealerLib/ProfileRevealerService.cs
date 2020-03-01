@@ -10,6 +10,7 @@ using Assets.Scripts.Missions;
 using Assets.Scripts.Services;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ProfileRevealerLib {
 	public class ProfileRevealerService : MonoBehaviour {
@@ -40,6 +41,7 @@ namespace ProfileRevealerLib {
 			} else {
 				this.RefreshConfig();
 				this.KMGameInfo.OnStateChange = this.KMGameInfo_OnStateChange;
+				UnityEngine.SceneManagement.SceneManager.sceneLoaded += this.SceneManager_sceneLoaded;
 			}
 		}
 
@@ -87,9 +89,6 @@ namespace ProfileRevealerLib {
 			} else if (state == KMGameInfo.State.Transitioning && this.gameState == KMGameInfo.State.Setup) {
 				this.KMModSettings.RefreshSettings();
 				this.RefreshConfig();
-
-				if (this.config.ShowModuleNames && GameplayState.MissionToLoad != "freeplay" && GameplayState.MissionToLoad != "custom")
-					this.StartCoroutine(this.ShowAdvantageousWarning());
 			} else if (state == KMGameInfo.State.Setup) {
 				if (this.tweaksService == null) {
 					Debug.Log("[Profile Revealer] Looking for Tweaks service...");
@@ -103,6 +102,14 @@ namespace ProfileRevealerLib {
 				}
 			}
 			this.gameState = state;
+		}
+
+		private void SceneManager_sceneLoaded(Scene scene, LoadSceneMode loadSceneMode) {
+			if (scene.name == "gameplayLoadingScene") {
+				if (this.config.ShowModuleNames && GameplayState.MissionToLoad != FreeplayMissionGenerator.FREEPLAY_MISSION_ID &&
+					GameplayState.MissionToLoad != ModMission.CUSTOM_MISSION_ID)
+					this.StartCoroutine(this.ShowAdvantageousWarning());
+			}
 		}
 
 		private void RefreshConfig() {
@@ -123,7 +130,7 @@ namespace ProfileRevealerLib {
 		}
 
 		private IEnumerator ShowAdvantageousWarning() {
-			yield return new WaitForSeconds(2.5f);
+			yield return null;
 			// If Tweaks is present, we'll use its warning.
 			if (this.tweaksService != null) {
 				var warning = this.tweaksService.transform.Find("UI/AdvantageousWarning");
