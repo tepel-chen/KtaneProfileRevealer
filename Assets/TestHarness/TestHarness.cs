@@ -1399,7 +1399,9 @@ public class TestHarness : MonoBehaviour
         {
             MoveCamera(currentSelectableArea.Selectable);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectableArea.Selectable);
+            if (currentSelectable.ModSelectable != null && currentSelectable.ModSelectable.OnDefocus != null) currentSelectable.ModSelectable.OnDefocus();
             currentSelectable = currentSelectableArea.Selectable;
+            if (currentSelectable.ModSelectable.OnFocus != null) currentSelectable.ModSelectable.OnFocus();
             if (root.Children.Contains(currentSelectable))
                 currentModule = currentSelectable;
 
@@ -1425,6 +1427,7 @@ public class TestHarness : MonoBehaviour
         {
             MoveCamera(currentSelectable.Parent);
             currentSelectable.DeactivateChildSelectableAreas(currentSelectable.Parent);
+            if (currentSelectable.ModSelectable.OnDefocus != null) currentSelectable.ModSelectable.OnDefocus();
             currentSelectable = currentSelectable.Parent;
             currentSelectable.ActivateChildSelectableAreas();
             lastSelected = currentSelectable.GetCurrentChild();

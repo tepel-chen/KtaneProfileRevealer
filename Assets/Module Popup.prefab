@@ -123,8 +123,9 @@ MonoBehaviour:
   m_Script: {fileID: -1142665482, guid: cb72d33074053b84da0cdb9a6934e36b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Canvas: {fileID: 1439277210877128}
+  Canvas: {fileID: 224344186849792930}
   Text: {fileID: 114537630968016556}
+  BoxCollider: {fileID: 224204806509314334}
 --- !u!114 &114051198381645240
 MonoBehaviour:
   m_ObjectHideFlags: 1

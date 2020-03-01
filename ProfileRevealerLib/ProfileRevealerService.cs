@@ -208,6 +208,7 @@ namespace ProfileRevealerLib {
 						var kmNeedyModule = component.GetComponent<KMNeedyModule>();
 
 						var popup = Instantiate(this.PopupPrefab, component.transform, false);
+						popup.Module = component.transform;
 						if (this.config.ShowModuleNames) popup.moduleName = component.GetModuleDisplayName();
 						popup.Delay = this.config.Delay;
 						if (kmBombModule == null && kmNeedyModule == null) {
@@ -260,6 +261,7 @@ namespace ProfileRevealerLib {
 					Debug.Log($"[Profile Revealer] Attaching to '{name}'.");
 
 					var popup = Instantiate(this.PopupPrefab, transform, false);
+					popup.Module = transform;
 					if (this.config.ShowModuleNames) popup.moduleName = transform.name;
 					popup.Delay = 2;
 					popup.enabledProfiles = new[] { "Alice", "Bob" };
