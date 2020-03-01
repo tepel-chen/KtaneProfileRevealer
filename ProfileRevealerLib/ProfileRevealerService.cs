@@ -222,10 +222,8 @@ namespace ProfileRevealerLib {
 						Debug.LogException(ex, this);
 					}
 				}
-			} else {
-				Debug.LogWarning($"[Profile Revealer] The Mod Selector profile directory does not exist. Abort.");
-				yield break;
-			}
+			} else
+				Debug.Log($"[Profile Revealer] The Mod Selector profile directory does not exist.");
 
 			while (true) {
 				foreach (var bomb in bombs.Except(oldBombs)) {

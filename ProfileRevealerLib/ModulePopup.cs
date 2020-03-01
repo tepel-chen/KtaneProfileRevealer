@@ -29,13 +29,18 @@ namespace ProfileRevealerLib {
 			this.Canvas.gameObject.SetActive(false);
 
 			var builder = new StringBuilder();
-			if (this.moduleName != null) builder.Append($"<b>{this.moduleName}</b>\n");
-			builder.Append($"Enabled by: <color=lime>{enabledProfilesStr}</color>");
+			if (this.moduleName != null) builder.AppendLine($"<b>{this.moduleName}</b>");
+			if (enabledProfilesStr.Length > 0)
+				builder.AppendLine($"Enabled by: <color=lime>{enabledProfilesStr}</color>");
 			if (disabledProfilesStr.Length > 0)
-				builder.Append($"\nDisabled by: <color=red>{disabledProfilesStr}</color>");
+				builder.AppendLine($"Disabled by: <color=red>{disabledProfilesStr}</color>");
 			if (inactiveProfilesStr.Length > 0)
-				builder.Append($"\nInactive vetos: <color=silver>{inactiveProfilesStr}</color>");
-			this.Text.text = builder.ToString();
+				builder.AppendLine($"Inactive vetos: <color=silver>{inactiveProfilesStr}</color>");
+			if (builder.Length == 0) this.Text.text = "No profiles found.";
+			else {
+				builder.Remove(builder.Length - 1, 1);
+				this.Text.text = builder.ToString();
+			}
 
 			var colliders = new List<Collider>();
 			foreach (var collider in this.Module.GetComponentsInChildren<Collider>(true)) {
