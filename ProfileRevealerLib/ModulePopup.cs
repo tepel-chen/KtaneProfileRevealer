@@ -52,7 +52,6 @@ namespace ProfileRevealerLib {
 
 			var halfExtents = this.BoxCollider.transform.lossyScale;
 			halfExtents.Scale(new Vector3(300, 150, 100));
-			Debug.Log($"{this.BoxCollider.position} {halfExtents} {this.BoxCollider.eulerAngles}");
 			if (Physics.CheckBox(this.BoxCollider.position, halfExtents, this.BoxCollider.rotation)) {
 				var transform = (RectTransform) this.Canvas.GetChild(0);
 				transform.pivot = new Vector2(0, 1);
