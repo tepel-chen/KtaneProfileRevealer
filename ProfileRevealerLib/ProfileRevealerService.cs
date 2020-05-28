@@ -245,7 +245,6 @@ namespace ProfileRevealerLib {
 							popup.disabledProfiles = profiles.Where(p => p.Value.Contains(moduleID)).Select(p => p.Key);
 							popup.inactiveProfiles = inactiveVetos.Where(p => p.Value.Contains(moduleID)).Select(p => p.Key);
 						}
-						popup.transform.SetParent(component.transform.parent, true);
 						var selectable = component.GetComponent<Selectable>();
 						selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
 						selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
@@ -291,7 +290,6 @@ namespace ProfileRevealerLib {
 					popup.enabledProfiles = new[] { "Alice", "Bob" };
 					popup.disabledProfiles = new[] { "Carol", "Dan" };
 					popup.inactiveProfiles = new[] { "Veto A", "Veto B" };
-					popup.transform.SetParent(transform.parent, true);
 					var selectable = transform.GetComponent<KMSelectable>();
 					selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
 					selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
