@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
+    <Compile Include="LeaderboardController.cs" />
     <Compile Include="ModifierKeys.cs" />
     <Compile Include="ModulePopup.cs" />
     <Compile Include="ProfileRevealerService.cs" />

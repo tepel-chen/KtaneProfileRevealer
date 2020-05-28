@@ -9,13 +9,15 @@
 [Ll]og/
 [Ll]ogs/
 /[Uu]ser[Ss]ettings/
+/Assets/Plugins/Managed/ProfileRevealerLib.dll
+/Assets/Plugins/Managed/ProfileRevealerLib.dll.meta
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
-!/[Aa]ssets/**/*.meta
+# !/[Aa]ssets/**/*.meta
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*

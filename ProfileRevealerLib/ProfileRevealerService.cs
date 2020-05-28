@@ -84,10 +84,7 @@ namespace ProfileRevealerLib {
 			if (state == KMGameInfo.State.Gameplay) {
 				// Enabling Show Module Names is considered an advantageous feature, so disable records in that case.
 				// This code is based on the Tweaks mod.
-				if (this.config.ShowModuleNames) {
-					if (this.tweaksService != null) AbstractServices.Instance.GetType().GetField("TargetMissionID").SetValue(null, GameplayState.MissionToLoad);
-					else SteamFilterService.TargetMissionID = GameplayState.MissionToLoad;
-				}
+				if (this.config.ShowModuleNames) LeaderboardController.DisableLeaderboards();
 				this.StartCoroutine(this.CheckForBombs());
 			} else if (state == KMGameInfo.State.Transitioning && this.gameState == KMGameInfo.State.Setup) {
 				this.KMModSettings.RefreshSettings();
@@ -98,10 +95,10 @@ namespace ProfileRevealerLib {
 					var obj = GameObject.Find("Tweaks(Clone)");
 					if (obj != null) this.tweaksService = obj.GetComponent("Tweaks");
 					if (this.tweaksService != null) Debug.Log("[Profile Revealer] Found Tweaks service.");
-					else Debug.Log("[Profile Revealer] Did not find Tweaks service.");
-
-					if (this.tweaksService == null)
-						typeof(AbstractServices).GetField("instance", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, new SteamFilterService());
+					else {
+						Debug.Log("[Profile Revealer] Did not find Tweaks service.");
+						LeaderboardController.Install();
+					}
 				}
 			}
 			this.gameState = state;
