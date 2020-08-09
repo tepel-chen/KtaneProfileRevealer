@@ -198,7 +198,7 @@ namespace ProfileRevealerLib {
 			}
 			path = Path.Combine(Application.persistentDataPath, "ModProfiles");
 			if (Directory.Exists(path)) {
-				foreach (var file in Directory.GetFiles(path)) {
+				foreach (var file in Directory.GetFiles(path, "*.json")) {
 					var profileName = Path.GetFileNameWithoutExtension(file);
 					try {
 						using var reader = new StreamReader(file);
