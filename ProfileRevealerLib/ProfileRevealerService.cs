@@ -108,7 +108,7 @@ namespace ProfileRevealerLib {
 
 		private bool prevPressed;
 		public void Update() {
-			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null && this.vrControllers != null) {
+			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null && this.vrControllers == null) {
 				bool pressed;
 				if (this.config.PopupKey != 0) {
 					pressed = Input.GetKeyDown(this.config.PopupKey) && (this.config.PopupKeyModifiers == 0 || (
