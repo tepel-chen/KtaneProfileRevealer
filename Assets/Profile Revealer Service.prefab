@@ -59,7 +59,7 @@ GameObject:
   - component: {fileID: 114887141543855098}
   - component: {fileID: 114410048241445114}
   m_Layer: 0
-  m_Name: Module Popup Service
+  m_Name: Profile Revealer Service
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
