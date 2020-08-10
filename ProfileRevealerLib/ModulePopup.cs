@@ -17,6 +17,7 @@ namespace ProfileRevealerLib {
 		public float Delay { get; set; }
 		public Transform Module { get; set; }
 		internal string moduleName;
+		internal string profileName;
 		internal IEnumerable<string> enabledProfiles;
 		internal IEnumerable<string> disabledProfiles;
 		internal IEnumerable<string> inactiveProfiles;
@@ -30,6 +31,8 @@ namespace ProfileRevealerLib {
 
 			var builder = new StringBuilder();
 			if (this.moduleName != null) builder.AppendLine($"<b>{this.moduleName}</b>");
+			if (profileName != null)
+				builder.AppendLine($"Chosen from: <color=yellow>{profileName}</color>");
 			if (enabledProfilesStr.Length > 0)
 				builder.AppendLine($"Enabled by: <color=lime>{enabledProfilesStr}</color>");
 			if (disabledProfilesStr.Length > 0)

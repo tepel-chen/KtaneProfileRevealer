@@ -3,11 +3,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Assets.Scripts.Missions;
 using Assets.Scripts.Services;
+
+using InControl;
+
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,6 +32,12 @@ namespace ProfileRevealerLib {
 		private ModulePopup? focusedModulePopup;
 		private Component? tweaksService;
 
+		private readonly List<ModulePopup> popups = new List<ModulePopup>();
+
+		private List<KTTrackedController>? vrControllers;
+
+		private static readonly FieldInfo currentSelectableField = typeof(KTTrackedController).GetField("currentSelectable", BindingFlags.NonPublic | BindingFlags.Instance);
+
 		private FieldInfo? tweaksSettingsField;
 		private FieldInfo? tweaksDisableAdvantageousField;
 
@@ -46,11 +56,59 @@ namespace ProfileRevealerLib {
 				this.KMGameInfo.OnStateChange = this.KMGameInfo_OnStateChange;
 				UnityEngine.SceneManagement.SceneManager.sceneLoaded += this.SceneManager_sceneLoaded;
 			}
+
+			if (KTInputManager.Instance.IsMotionControlMode())
+				this.StartCoroutine(this.SearchForVrControllersCoroutine());
+		}
+
+		private IEnumerator SearchForVrControllersCoroutine() {
+			Debug.Log($"[Provile Revealer] Motion controls are active. Searching for VR controllers.");
+			this.vrControllers = new List<KTTrackedController>();
+			while (true) {
+				foreach (var controller in KTInputManager.Instance.MotionControls.Controllers) {
+					if (!this.vrControllers.Contains(controller)) {
+						this.vrControllers.Add(controller);
+						var steamVRController = controller.GetComponent<SteamVR_TrackedController>();
+						if (steamVRController != null) {
+							Debug.Log($"[Provile Revealer] Found a Steam VR controller.");
+							steamVRController.Gripped += (sender, e) => this.VrButtonPressed(controller);
+						} else {
+							var oculusVRController = controller.GetComponent<KTOculusTouchDevice>();
+							if (oculusVRController != null) {
+								Debug.Log($"[Provile Revealer] Found an Oculus VR controller.");
+								oculusVRController.ButtonTwoPressed += () => this.VrButtonPressed(controller);
+								oculusVRController.ButtonFourPressed += () => this.VrButtonPressed(controller);
+							} else
+								Debug.LogWarning($"[Provile Revealer] Found an unknown VR controller.");
+						}
+					}
+				}
+				yield return new WaitForSeconds(10);
+			}
+		}
+
+		private void VrButtonPressed(KTTrackedController controller) {
+			if (this.highlightedModulePopup != null) {
+				this.highlightedModulePopup.Hide();
+				this.highlightedModulePopup = null;
+			}
+			var selectable = (Selectable) currentSelectableField.GetValue(controller);
+			Debug.Log($"[Provile Revealer] Grip button pressed on {selectable}.");
+			while (selectable != null && selectable.GetComponent<BombComponent>() == null)
+				selectable = selectable.Parent;
+			Debug.Log($"[Provile Revealer] Module parent is {selectable}.");
+			if (selectable != null) {
+				var popup = this.popups.FirstOrDefault(p => p.Module == selectable.transform);
+				if (popup != null) {
+					this.highlightedModulePopup = popup;
+					popup.Show();
+				}
+			}
 		}
 
 		private bool prevPressed;
 		public void Update() {
-			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null) {
+			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null && this.vrControllers != null) {
 				bool pressed;
 				if (this.config.PopupKey != 0) {
 					pressed = Input.GetKeyDown(this.config.PopupKey) && (this.config.PopupKeyModifiers == 0 || (
@@ -90,6 +148,7 @@ namespace ProfileRevealerLib {
 				this.KMModSettings.RefreshSettings();
 				this.RefreshConfig();
 			} else if (state == KMGameInfo.State.Setup) {
+				this.popups.Clear();
 				if (this.tweaksService == null) {
 					Debug.Log("[Profile Revealer] Looking for Tweaks service...");
 					var obj = GameObject.Find("Tweaks(Clone)");
@@ -222,8 +281,15 @@ namespace ProfileRevealerLib {
 			} else
 				Debug.Log($"[Profile Revealer] The Mod Selector profile directory does not exist.");
 
+			Debug.Log($"[Profile Revealer] Looking for Dynamic Mission Generator API.");
+			var dynamicMissionGeneratorService = GameObject.Find("Dynamic Mission Generator API");
+			var dynamicMissionGeneratorApi = dynamicMissionGeneratorService?.GetComponent<IDictionary<string, object>>();
+			var moduleProfiles = dynamicMissionGeneratorApi != null ? (ReadOnlyCollection<ReadOnlyCollection<string>>) dynamicMissionGeneratorApi["ModuleProfiles"] : null;
+			var bombIndex = 0;
+
 			while (true) {
 				foreach (var bomb in bombs.Except(oldBombs)) {
+					var moduleIndex = 0;
 					foreach (var component in bomb.BombComponents) {
 						if (component.ComponentType == ComponentTypeEnum.Empty || component.ComponentType == ComponentTypeEnum.Timer) continue;
 						Debug.Log($"[Profile Revealer] Attaching to '{component.name}'.");
@@ -233,6 +299,9 @@ namespace ProfileRevealerLib {
 
 						var popup = Instantiate(this.PopupPrefab, component.transform, false);
 						popup.Module = component.transform;
+						if (moduleProfiles != null && bombIndex < moduleProfiles.Count && moduleIndex < moduleProfiles[bombIndex].Count)
+							popup.profileName = moduleProfiles[bombIndex][moduleIndex];
+						++moduleIndex;
 						if (this.config.ShowModuleNames) popup.moduleName = component.GetModuleDisplayName();
 						popup.Delay = this.config.Delay;
 						if (kmBombModule == null && kmNeedyModule == null) {
@@ -245,13 +314,18 @@ namespace ProfileRevealerLib {
 							popup.disabledProfiles = profiles.Where(p => p.Value.Contains(moduleID)).Select(p => p.Key);
 							popup.inactiveProfiles = inactiveVetos.Where(p => p.Value.Contains(moduleID)).Select(p => p.Key);
 						}
-						var selectable = component.GetComponent<Selectable>();
-						selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
-						selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
-						selectable.OnFocus += () => { this.focusedModulePopup = popup; popup.Hide(); };
-						selectable.OnDefocus += () => { if (this.focusedModulePopup == popup) this.focusedModulePopup = null; popup.Hide(); };
+						this.popups.Add(popup);
+
+						if (!KTInputManager.Instance.IsMotionControlMode()) {
+							var selectable = component.GetComponent<Selectable>();
+							selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
+							selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
+							selectable.OnFocus += () => { this.focusedModulePopup = popup; popup.Hide(); };
+							selectable.OnDefocus += () => { if (this.focusedModulePopup == popup) this.focusedModulePopup = null; popup.Hide(); };
+						}
 					}
 					oldBombs.Add(bomb);
+					++bombIndex;
 				}
 
 				if (!isFactoryRoom) yield break;

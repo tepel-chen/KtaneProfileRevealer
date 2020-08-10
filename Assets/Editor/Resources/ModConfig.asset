@@ -14,30 +14,21 @@ MonoBehaviour:
   id: ProfileRevealer
   title: Profile Revealer
   author: Andrio Celos
-  description: 'Have you ever been wondering whose [url=https://steamcommunity.com/sharedfiles/filedetails/?id=801400247]Mod
+  description: "Have you ever been wondering whose [url=https://steamcommunity.com/sharedfiles/filedetails/?id=801400247]Mod
     Selector[/url] profile let that module appear on the bomb, or just want to know
     which of your experts can help you with it? This mod will give you the answers
-    without leaving the game.
-
-
-    Highlight (but do not select) any module for a few seconds, or press F1 while
-    it is highlighted or selected, and the mod will show the following:
-
-    * All active expert profiles which enable the module
-
-    * All active expert profiles which disable the module
-
-    * All inactive defuser profiles which would veto the module
-
-
-    The key mentioned above and the delay before the overlay appears can be configured.
-    There is also an option to show the module''s name, but using this will disable
-    submitting leaderboard entries.
-
-
-    This mod is currently not compatible with motion controls in VR.
-
-'
+    without leaving the game.\r\n\r\nHighlight (but do not select) any module for
+    a few seconds, or press F1 while it is highlighted or selected, and the mod will
+    show the following:\r\n* All active expert profiles which enable the module\r\n*
+    All active expert profiles which disable the module\r\n* All inactive defuser
+    profiles which would veto the module\r\n* When using Dynamic Mission Generator
+    profile pools, which profile the module was chosen from\r\n\r\nThe key mentioned
+    above and the delay before the overlay appears can be configured. There is also
+    an option to show the module's name, but using this will disable submitting leaderboard
+    entries.\r\n\r\nWhen using motion controls in VR, instead highlight any highlightable
+    part of a module and press the grip button on a Steam VR controller, or the B
+    or Y button on an Oculus Touch controller. Press the button again with nothing
+    highlighted to hide the popup.\r\n"
   version: 1.3
   outputFolder: C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody
     Explodes\mods
