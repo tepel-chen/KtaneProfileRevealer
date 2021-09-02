@@ -16,34 +16,19 @@ namespace ProfileRevealerLib {
 
 		public float Delay { get; set; }
 		public Transform Module { get; set; }
+		public string ProfileName { get => this.profileName; set { this.profileName = value; this.setText(); } }
+
 		internal string moduleName;
-		internal string profileName;
+		private string profileName;
 		internal IEnumerable<string> enabledProfiles;
 		internal IEnumerable<string> disabledProfiles;
 		internal IEnumerable<string> inactiveProfiles;
 		private Coroutine coroutine;
 
 		public void Start() {
-			var enabledProfilesStr = Join(", ", this.enabledProfiles);
-			var disabledProfilesStr = Join(", ", this.disabledProfiles);
-			var inactiveProfilesStr = Join(", ", this.inactiveProfiles);
 			this.Canvas.gameObject.SetActive(false);
 
-			var builder = new StringBuilder();
-			if (this.moduleName != null) builder.AppendLine($"<b>{this.moduleName}</b>");
-			if (profileName != null)
-				builder.AppendLine($"Chosen from: <color=yellow>{profileName}</color>");
-			if (enabledProfilesStr.Length > 0)
-				builder.AppendLine($"Enabled by: <color=lime>{enabledProfilesStr}</color>");
-			if (disabledProfilesStr.Length > 0)
-				builder.AppendLine($"Disabled by: <color=red>{disabledProfilesStr}</color>");
-			if (inactiveProfilesStr.Length > 0)
-				builder.AppendLine($"Inactive vetos: <color=silver>{inactiveProfilesStr}</color>");
-			if (builder.Length == 0) this.Text.text = "No profiles found.";
-			else {
-				builder.Remove(builder.Length - 1, 1);
-				this.Text.text = builder.ToString();
-			}
+			this.setText();
 
 			var colliders = new List<Collider>();
 			foreach (var collider in this.Module.GetComponentsInChildren<Collider>(true)) {
@@ -61,6 +46,28 @@ namespace ProfileRevealerLib {
 			}
 
 			foreach (var collider in colliders) collider.enabled = false;
+		}
+
+		private void setText() {
+			var enabledProfilesStr = Join(", ", this.enabledProfiles);
+			var disabledProfilesStr = Join(", ", this.disabledProfiles);
+			var inactiveProfilesStr = Join(", ", this.inactiveProfiles);
+
+			var builder = new StringBuilder();
+			if (this.moduleName != null) builder.AppendLine($"<b>{this.moduleName}</b>");
+			if (ProfileName != null)
+				builder.AppendLine($"Chosen from: <color=yellow>{ProfileName}</color>");
+			if (enabledProfilesStr.Length > 0)
+				builder.AppendLine($"Enabled by: <color=lime>{enabledProfilesStr}</color>");
+			if (disabledProfilesStr.Length > 0)
+				builder.AppendLine($"Disabled by: <color=red>{disabledProfilesStr}</color>");
+			if (inactiveProfilesStr.Length > 0)
+				builder.AppendLine($"Inactive vetos: <color=silver>{inactiveProfilesStr}</color>");
+			if (builder.Length == 0) this.Text.text = "No profiles found.";
+			else {
+				builder.Remove(builder.Length - 1, 1);
+				this.Text.text = builder.ToString();
+			}
 		}
 
 		private static string Join<T>(string separator, IEnumerable<T> enumerable) {

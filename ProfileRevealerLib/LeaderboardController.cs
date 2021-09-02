@@ -1,6 +1,7 @@
 ﻿// LeaderboardController is imported from Tweaks (https://github.com/samfun123/KTANE-Mods)
 // Tweaks is © 2018-2020 samfun123, available under the Keep Talking and Nobody Explodes ModKit License
 
+#if !DEBUG
 using System.Reflection;
 using Assets.Scripts.Leaderboards;
 using Assets.Scripts.Records;
@@ -68,3 +69,4 @@ class SteamFilterService : ServicesSteam
 		base.ExecuteLeaderboardRequest(request);
 	}
 }
+#endif

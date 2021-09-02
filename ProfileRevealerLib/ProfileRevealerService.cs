@@ -7,14 +7,18 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
+using Newtonsoft.Json;
+using UnityEngine;
+
+#if !DEBUG
+using UnityEngine.SceneManagement;
+
 using Assets.Scripts.Missions;
 using Assets.Scripts.Services;
 
 using InControl;
-
-using Newtonsoft.Json;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+#endif
 
 namespace ProfileRevealerLib {
 	public class ProfileRevealerService : MonoBehaviour {
@@ -31,12 +35,14 @@ namespace ProfileRevealerLib {
 		private ModulePopup? highlightedModulePopup;
 		private ModulePopup? focusedModulePopup;
 		private Component? tweaksService;
+		private IDictionary<string, IList<string>>? moduleProfiles;
 
 		private readonly List<ModulePopup> popups = new List<ModulePopup>();
 
+#if !DEBUG
 		private List<KTTrackedController>? vrControllers;
-
 		private static readonly FieldInfo currentSelectableField = typeof(KTTrackedController).GetField("currentSelectable", BindingFlags.NonPublic | BindingFlags.Instance);
+#endif
 
 		private FieldInfo? tweaksSettingsField;
 		private FieldInfo? tweaksDisableAdvantageousField;
@@ -53,14 +59,17 @@ namespace ProfileRevealerLib {
 				this.StartCoroutine(this.CheckForBombsTest());
 			} else {
 				this.RefreshConfig();
-				this.KMGameInfo.OnStateChange = this.KMGameInfo_OnStateChange;
-				UnityEngine.SceneManagement.SceneManager.sceneLoaded += this.SceneManager_sceneLoaded;
 			}
 
+#if !DEBUG
+			this.KMGameInfo.OnStateChange = this.KMGameInfo_OnStateChange;
+			UnityEngine.SceneManagement.SceneManager.sceneLoaded += this.SceneManager_sceneLoaded;
 			if (KTInputManager.Instance.IsMotionControlMode())
 				this.StartCoroutine(this.SearchForVrControllersCoroutine());
+#endif
 		}
 
+#if !DEBUG
 		private IEnumerator SearchForVrControllersCoroutine() {
 			Debug.Log($"[Provile Revealer] Motion controls are active. Searching for VR controllers.");
 			this.vrControllers = new List<KTTrackedController>();
@@ -101,14 +110,20 @@ namespace ProfileRevealerLib {
 				var popup = this.popups.FirstOrDefault(p => p.Module == selectable.transform);
 				if (popup != null) {
 					this.highlightedModulePopup = popup;
+					this.SetProfileName(popup);
 					popup.Show();
 				}
 			}
 		}
+#endif
 
 		private bool prevPressed;
 		public void Update() {
-			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null && this.vrControllers == null) {
+			if (this.gameState == KMGameInfo.State.Gameplay && this.config != null
+#if !DEBUG
+				&& this.vrControllers == null
+#endif
+				) {
 				bool pressed;
 				if (this.config.PopupKey != 0) {
 					pressed = Input.GetKeyDown(this.config.PopupKey) && (this.config.PopupKeyModifiers == 0 || (
@@ -133,11 +148,15 @@ namespace ProfileRevealerLib {
 					else if (this.focusedModulePopup != null) popup = this.focusedModulePopup;
 					else return;
 					if (popup.Visible) popup.Hide();
-					else popup.Show();
+					else {
+						this.SetProfileName(popup);
+						popup.Show();
+					}
 				}
 			}
 		}
 
+#if !DEBUG
 		private void KMGameInfo_OnStateChange(KMGameInfo.State state) {
 			if (state == KMGameInfo.State.Gameplay) {
 				// Enabling Show Module Names is considered an advantageous feature, so disable records in that case.
@@ -170,6 +189,7 @@ namespace ProfileRevealerLib {
 					this.StartCoroutine(this.ShowAdvantageousWarning());
 			}
 		}
+#endif
 
 		private void RefreshConfig() {
 			bool rewriteFile;
@@ -224,6 +244,7 @@ namespace ProfileRevealerLib {
 			}
 		}
 
+#if !DEBUG
 		private IEnumerator CheckForBombs() {
 			Debug.Log("[Profile Revealer] Waiting for bombs...");
 			var oldBombs = new List<Bomb>();
@@ -264,6 +285,7 @@ namespace ProfileRevealerLib {
 						var profile = new JsonSerializer().Deserialize<Profile>(new JsonTextReader(reader));
 						if (profile.DisabledList == null) {
 							Debug.LogWarning($"[Profile Revealer] Could not load profile {Path.GetFileName(file)}");
+							Debug.LogWarning($"{nameof(profile.DisabledList)} is missing.");
 							continue;
 						}
 						if (enabledProfiles.Contains(profileName)) {
@@ -283,9 +305,11 @@ namespace ProfileRevealerLib {
 
 			Debug.Log($"[Profile Revealer] Looking for Dynamic Mission Generator API.");
 			var dynamicMissionGeneratorService = GameObject.Find("Dynamic Mission Generator API");
-			var dynamicMissionGeneratorApi = dynamicMissionGeneratorService?.GetComponent<IDictionary<string, object>>();
-			var moduleProfiles = dynamicMissionGeneratorApi != null ? (ReadOnlyCollection<ReadOnlyCollection<string>>) dynamicMissionGeneratorApi["ModuleProfiles"] : null;
+			var dynamicMissionGeneratorApi = dynamicMissionGeneratorService?.GetComponent<IDictionary<string, IDictionary<string, IList<string>>>>();
+			this.moduleProfiles = dynamicMissionGeneratorApi != null ? dynamicMissionGeneratorApi["ModuleProfiles"] : null;
 			var bombIndex = 0;
+
+			var instanceCount = new Dictionary<string, int>();
 
 			while (true) {
 				foreach (var bomb in bombs.Except(oldBombs)) {
@@ -299,10 +323,9 @@ namespace ProfileRevealerLib {
 
 						var popup = Instantiate(this.PopupPrefab, component.transform, false);
 						popup.Module = component.transform;
-						if (moduleProfiles != null && bombIndex < moduleProfiles.Count && moduleIndex < moduleProfiles[bombIndex].Count)
-							popup.profileName = moduleProfiles[bombIndex][moduleIndex];
 						++moduleIndex;
 						if (this.config.ShowModuleNames) popup.moduleName = component.GetModuleDisplayName();
+
 						popup.Delay = this.config.Delay;
 						if (kmBombModule == null && kmNeedyModule == null) {
 							// Vanilla modules will be shown as enabled by all profiles.
@@ -313,12 +336,18 @@ namespace ProfileRevealerLib {
 							popup.enabledProfiles = profiles.Where(p => !p.Value.Contains(moduleID)).Select(p => p.Key);
 							popup.disabledProfiles = profiles.Where(p => p.Value.Contains(moduleID)).Select(p => p.Key);
 							popup.inactiveProfiles = inactiveVetos.Where(p => p.Value.Contains(moduleID)).Select(p => p.Key);
+
+							if (moduleProfiles != null && moduleProfiles.TryGetValue(moduleID, out var list)) {
+								if (!instanceCount.TryGetValue(moduleID, out var index)) index = 0;
+								popup.ProfileName = index < list.Count ? list[index] : null;
+								instanceCount[moduleID] = index + 1;
+							}
 						}
 						this.popups.Add(popup);
 
 						if (!KTInputManager.Instance.IsMotionControlMode()) {
 							var selectable = component.GetComponent<Selectable>();
-							selectable.OnHighlight += () => { this.highlightedModulePopup = popup; popup.ShowDelayed(); };
+							selectable.OnHighlight += () => { this.highlightedModulePopup = popup; this.SetProfileName(popup); popup.ShowDelayed(); };
 							selectable.OnHighlightEnded += () => { if (this.highlightedModulePopup == popup) this.highlightedModulePopup = null; popup.Hide(); };
 							selectable.OnFocus += () => { this.focusedModulePopup = popup; popup.Hide(); };
 							selectable.OnDefocus += () => { if (this.focusedModulePopup == popup) this.focusedModulePopup = null; popup.Hide(); };
@@ -335,6 +364,12 @@ namespace ProfileRevealerLib {
 					yield return new WaitForSeconds(1);
 				}
 			}
+		}
+#endif
+
+		[Obsolete("No longer needed")]
+		private void SetProfileName(ModulePopup popup) {
+			//popup.ProfileName = this.moduleProfiles != null && this.moduleProfiles.TryGetValue(popup.Module.gameObject, out var profile) ? profile : null;
 		}
 
 		private IEnumerator CheckForBombsTest() {

@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <LangVersion>8</LangVersion>
+    <GameInstallPath Condition=" '$(GameInstallPath)' == '' ">C:/Program Files (x86)/Steam/steamapps/common/Keep Talking and Nobody Explodes</GameInstallPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,10 +32,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
     <Reference Include="Assembly-CSharp">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="KMFramework">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\ktane_Data\Managed\KMFramework.dll</HintPath>
     </Reference>
@@ -75,7 +78,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "$(ProjectDir)\..\Assets\Plugins\Managed\$(TargetFileName)"
-copy "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody Explodes\mods\ProfileRevealer\$(TargetFileName)"</PostBuildEvent>
+    <PostBuildEvent>if "$(ConfigurationName)"=="Debug" copy "$(TargetPath)" "$(ProjectDir)\..\Assets\Plugins\Managed\$(TargetFileName)"
+if "$(ConfigurationName)"=="Release" copy "$(TargetPath)" "$(GameInstallPath)\mods\ProfileRevealer\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
