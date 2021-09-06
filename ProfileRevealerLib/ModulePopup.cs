@@ -16,7 +16,8 @@ namespace ProfileRevealerLib {
 
 		public float Delay { get; set; }
 		public Transform Module { get; set; }
-		public string ProfileName { get => this.profileName; set { this.profileName = value; this.setText(); } }
+		public string ProfileName { get => this.profileName; set { this.profileName = value; this.SetText(); } }
+		internal IList<string> bossStatus;
 
 		internal string moduleName;
 		private string profileName;
@@ -28,7 +29,7 @@ namespace ProfileRevealerLib {
 		public void Start() {
 			this.Canvas.gameObject.SetActive(false);
 
-			this.setText();
+			this.SetText();
 
 			var colliders = new List<Collider>();
 			foreach (var collider in this.Module.GetComponentsInChildren<Collider>(true)) {
@@ -48,15 +49,16 @@ namespace ProfileRevealerLib {
 			foreach (var collider in colliders) collider.enabled = false;
 		}
 
-		private void setText() {
+		private void SetText() {
 			var enabledProfilesStr = Join(", ", this.enabledProfiles);
 			var disabledProfilesStr = Join(", ", this.disabledProfiles);
 			var inactiveProfilesStr = Join(", ", this.inactiveProfiles);
 
 			var builder = new StringBuilder();
-			if (this.moduleName != null) builder.AppendLine($"<b>{this.moduleName}</b>");
-			if (ProfileName != null)
-				builder.AppendLine($"Chosen from: <color=yellow>{ProfileName}</color>");
+			if (this.moduleName != null) builder.Append($"<b>{this.moduleName}</b>{(this.bossStatus != null ? " " : "\n")}");
+			if (this.bossStatus != null) builder.AppendLine($"<color=red>({string.Join(", ", this.bossStatus.ToArray())})</color>");
+			if (this.ProfileName != null)
+				builder.AppendLine($"Chosen from: <color=yellow>{this.ProfileName}</color>");
 			if (enabledProfilesStr.Length > 0)
 				builder.AppendLine($"Enabled by: <color=lime>{enabledProfilesStr}</color>");
 			if (disabledProfilesStr.Length > 0)
