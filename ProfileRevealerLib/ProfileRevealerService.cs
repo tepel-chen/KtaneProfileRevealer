@@ -131,7 +131,7 @@ namespace ProfileRevealerLib {
 
 		private IEnumerator GetModuleJSONCoroutine()
 		{
-			var url = "https://buriburi/json/raw";
+			var url = "https://ktane.timwi.de/json/raw";
             using var http = UnityWebRequest.Get(url);
 
             yield return http.SendWebRequest();
