@@ -55,8 +55,8 @@ namespace ProfileRevealerLib {
 			var inactiveProfilesStr = Join(", ", this.inactiveProfiles);
 
 			var builder = new StringBuilder();
-			if (this.moduleName != null) builder.AppendLine($"<b>{this.moduleName}</b>");
-			if (this.bossStatus != null) builder.AppendLine($"<color=red>({ String.Join(", ", this.bossStatus.ToArray())})</color>");
+			if (this.moduleName != null) builder.Append($"<b>{this.moduleName}</b>{(this.bossStatus != null ? " " : "\n")}");
+			if (this.bossStatus != null) builder.AppendLine($"<color=red>({String.Join(", ", this.bossStatus.ToArray())})</color>");
 			if (ProfileName != null)
 				builder.AppendLine($"Chosen from: <color=yellow>{ProfileName}</color>");
 			if (enabledProfilesStr.Length > 0)

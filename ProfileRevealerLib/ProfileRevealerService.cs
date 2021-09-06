@@ -269,7 +269,7 @@ namespace ProfileRevealerLib {
 				if (this.config != null) {
 					// Make sure that the config file uses the current format; otherwise the Tweaks settings page does not initialise properly.
 					var dictionary = JsonConvert.DeserializeObject<IDictionary<string, object>>(this.KMModSettings.Settings);
-					rewriteFile = !dictionary.ContainsKey(nameof(Config.PopupKeys));
+					rewriteFile = !dictionary.ContainsKey(nameof(Config.ShowBossStatus));
 				} else {
 					this.config = new Config();
 					rewriteFile = true;
