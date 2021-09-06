@@ -69,7 +69,7 @@ namespace ProfileRevealerLib {
 		{
 			get
 			{
-				return ShowModuleNames || ShowBossStatus;
+				return this.ShowModuleNames || this.ShowBossStatus;
 
 			}
 		}
