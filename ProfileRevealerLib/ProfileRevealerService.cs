@@ -224,14 +224,13 @@ namespace ProfileRevealerLib {
 
 #if !DEBUG
 		private void KMGameInfo_OnStateChange(KMGameInfo.State state) {
-			if (state == KMGameInfo.State.Gameplay) {
+			if (state == KMGameInfo.State.Gameplay && this.gameState != KMGameInfo.State.Gameplay) {
+				this.KMModSettings.RefreshSettings();
+				this.RefreshConfig();
 				// Enabling Show Module Names is considered an advantageous feature, so disable records in that case.
 				// This code is based on the Tweaks mod.
 				if (this.config.IsAdvantagusFeatures) LeaderboardController.DisableLeaderboards();
 				this.StartCoroutine(this.CheckForBombs());
-			} else if (state == KMGameInfo.State.Transitioning && this.gameState == KMGameInfo.State.Setup) {
-				this.KMModSettings.RefreshSettings();
-				this.RefreshConfig();
 			} else if (state == KMGameInfo.State.Setup) {
 				this.popups.Clear();
 				if (this.tweaksService == null) {
@@ -256,6 +255,8 @@ namespace ProfileRevealerLib {
 			}
 		}
 #endif
+
+		private bool InNonFreeplayMission => GameplayState.MissionToLoad != FreeplayMissionGenerator.FREEPLAY_MISSION_ID && GameplayState.MissionToLoad != ModMission.CUSTOM_MISSION_ID;
 
 		private void RefreshConfig() {
 			bool rewriteFile;
@@ -286,8 +287,21 @@ namespace ProfileRevealerLib {
 				var tweaksSettings = this.tweaksSettingsField.GetValue(null);
 				if (this.tweaksDisableAdvantageousField == null)
 					this.tweaksDisableAdvantageousField = tweaksSettings.GetType().GetField("DisableAdvantageous", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-				if ((bool) this.tweaksDisableAdvantageousField.GetValue(tweaksSettings)) {
-					Debug.LogWarning("[Profile Revealer] Advantageous features are disabled in Tweaks settings. Overriding Show Module Names setting.");
+
+				var o = this.tweaksDisableAdvantageousField.GetValue(tweaksSettings);
+				Debug.LogWarning($"[Profile Revealer] DisableAdvantageous = {o}");
+
+				var disableAdvantageousFeatures = o switch {
+					bool b => b,
+					Enum e => Convert.ToInt32(e) switch {
+						(int) AdvantageousMode.Missions => this.InNonFreeplayMission,
+						(int) AdvantageousMode.On => true,
+						_ => false
+					},
+					_ => false
+				};
+				if (disableAdvantageousFeatures) {
+					Debug.LogWarning("[Profile Revealer] Advantageous features are disabled in Tweaks settings. Overriding Show Module Names and Show Boss Status settings.");
 					this.config.ShowModuleNames = false;
 					this.config.ShowBossStatus = false;
 				}

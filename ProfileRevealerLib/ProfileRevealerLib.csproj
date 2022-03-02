@@ -12,7 +12,7 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <LangVersion>8</LangVersion>
+    <LangVersion>latest</LangVersion>
     <GameInstallPath Condition=" '$(GameInstallPath)' == '' ">C:/Program Files (x86)/Steam/steamapps/common/Keep Talking and Nobody Explodes</GameInstallPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -76,6 +76,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdvantageousMode.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="LeaderboardController.cs" />
     <Compile Include="ModifierKeys.cs" />
