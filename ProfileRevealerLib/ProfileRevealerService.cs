@@ -76,7 +76,7 @@ namespace ProfileRevealerLib {
 
 #if !DEBUG
 		private IEnumerator SearchForVrControllersCoroutine() {
-			Debug.Log($"[Provile Revealer] Motion controls are active. Searching for VR controllers.");
+			Debug.Log($"[Profile Revealer] Motion controls are active. Searching for VR controllers.");
 			this.vrControllers = new List<KTTrackedController>();
 			while (true) {
 				foreach (var controller in KTInputManager.Instance.MotionControls.Controllers) {
@@ -84,16 +84,16 @@ namespace ProfileRevealerLib {
 						this.vrControllers.Add(controller);
 						var steamVRController = controller.GetComponent<SteamVR_TrackedController>();
 						if (steamVRController != null) {
-							Debug.Log($"[Provile Revealer] Found a Steam VR controller.");
+							Debug.Log($"[Profile Revealer] Found a Steam VR controller.");
 							steamVRController.Gripped += (sender, e) => this.VrButtonPressed(controller);
 						} else {
 							var oculusVRController = controller.GetComponent<KTOculusTouchDevice>();
 							if (oculusVRController != null) {
-								Debug.Log($"[Provile Revealer] Found an Oculus VR controller.");
+								Debug.Log($"[Profile Revealer] Found an Oculus VR controller.");
 								oculusVRController.ButtonTwoPressed += () => this.VrButtonPressed(controller);
 								oculusVRController.ButtonFourPressed += () => this.VrButtonPressed(controller);
 							} else
-								Debug.LogWarning($"[Provile Revealer] Found an unknown VR controller.");
+								Debug.LogWarning($"[Profile Revealer] Found an unknown VR controller.");
 						}
 					}
 				}
@@ -107,10 +107,10 @@ namespace ProfileRevealerLib {
 				this.highlightedModulePopup = null;
 			}
 			var selectable = (Selectable) currentSelectableField.GetValue(controller);
-			Debug.Log($"[Provile Revealer] Grip button pressed on {selectable}.");
+			Debug.Log($"[Profile Revealer] Grip button pressed on {selectable}.");
 			while (selectable != null && selectable.GetComponent<BombComponent>() == null)
 				selectable = selectable.Parent;
-			Debug.Log($"[Provile Revealer] Module parent is {selectable}.");
+			Debug.Log($"[Profile Revealer] Module parent is {selectable}.");
 			if (selectable != null) {
 				var popup = this.popups.FirstOrDefault(p => p.Module == selectable.transform);
 				if (popup != null) {
@@ -123,7 +123,7 @@ namespace ProfileRevealerLib {
 
 		private void GetModuleJSON()
 		{
-			Debug.Log($"[Provile Revealer] Starting request for boss status..");
+			Debug.Log($"[Profile Revealer] Starting request for boss status..");
 			this.bossStatus = new Dictionary<string, IList<string>>();
 			this.StartCoroutine(this.GetModuleJSONCoroutine());
 		}
