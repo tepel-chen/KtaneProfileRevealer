@@ -133,9 +133,9 @@ namespace ProfileRevealerLib {
 			var url = "https://ktane.timwi.de/json/raw";
             using var http = UnityWebRequest.Get(url);
 
-            yield return http.SendWebRequest();
+			yield return http.SendWebRequest();
 
-            if (http.isNetworkError)
+			if (http.isNetworkError)
             {
                 Debug.LogFormat(@"[Profile Revealer] Website {0} responded with error: {1}", url, http.error);
                 yield break;
@@ -155,17 +155,43 @@ namespace ProfileRevealerLib {
 			foreach (JObject module in allModules)
             {
                 var status = new List<string>() { };
+				if (module["BossStatus"] is JValue bossStatusV && bossStatusV.Value is string bossStatus)
+				{
+					if (bossStatus.Equals("FullBoss", StringComparison.InvariantCultureIgnoreCase))
+					{
+						status.Add("Full Boss");
+					}
+					if (bossStatus.Equals("SemiBoss", StringComparison.InvariantCultureIgnoreCase))
+					{
+						status.Add("Semi Boss");
+					}
+				}
                 if (module["IsFullBoss"] is JValue isFullBossV && isFullBossV.Value is bool isFullBoss && isFullBoss == true)
                 {
                     status.Add("Full Boss");
                 }
                 if (module["IsSemiBoss"] is JValue isSemiBossV && isSemiBossV.Value is bool isSemiBoss && isSemiBoss == true)
                 {
-                    status.Add("Semi Boss");
+                    status.Add("Semi-Boss");
                 }
                 if (module["IsPseudoNeedy"] is JValue isPseudoNeedyV && isPseudoNeedyV.Value is bool isPsudoNeedy && isPsudoNeedy == true)
                 {
-                    status.Add("Pseudo Needy");
+                    status.Add("Pseudo-Needy");
+                }
+                if (module["Quirks"] is JValue quirksV && quirksV.Value is string quirks)
+                {
+					foreach (var quirk0 in quirks.Split(','))
+					{
+						var quirk = quirk0.Trim();
+						if (quirk.Equals("PseudoNeedy", StringComparison.InvariantCultureIgnoreCase))
+						{
+							status.Add("Pseudo Needy");
+						}
+						else if (quirk.Equals("TimeDependent", StringComparison.InvariantCultureIgnoreCase))
+						{
+							status.Add("Time-Dependent");
+						}
+					}
                 }
 
 				if(status.Count > 0)
