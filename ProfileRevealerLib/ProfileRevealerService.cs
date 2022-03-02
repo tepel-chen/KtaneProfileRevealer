@@ -121,92 +121,67 @@ namespace ProfileRevealerLib {
 		}
 #endif
 
-		private void GetModuleJSON()
-		{
+		private void GetModuleJSON() {
 			Debug.Log($"[Profile Revealer] Starting request for boss status..");
 			this.bossStatus = new Dictionary<string, IList<string>>();
 			this.StartCoroutine(this.GetModuleJSONCoroutine());
 		}
 
-		private IEnumerator GetModuleJSONCoroutine()
-		{
+		private IEnumerator GetModuleJSONCoroutine() {
 			var url = "https://ktane.timwi.de/json/raw";
-            using var http = UnityWebRequest.Get(url);
+			using var http = UnityWebRequest.Get(url);
 
 			yield return http.SendWebRequest();
 
-			if (http.isNetworkError)
-            {
-                Debug.LogFormat(@"[Profile Revealer] Website {0} responded with error: {1}", url, http.error);
-                yield break;
-            }
+			if (http.isNetworkError) {
+				Debug.LogFormat(@"[Profile Revealer] Website {0} responded with error: {1}", url, http.error);
+				yield break;
+			}
 
-            if (http.responseCode != 200)
-            {
-                Debug.LogFormat(@"[Profile Revealer] Website {0} responded with code: {1}", url, http.responseCode);
-                yield break;
-            }
+			if (http.responseCode != 200) {
+				Debug.LogFormat(@"[Profile Revealer] Website {0} responded with code: {1}", url, http.responseCode);
+				yield break;
+			}
 
 			if (!(JObject.Parse(http.downloadHandler.text)["KtaneModules"] is JArray allModules)) {
 				Debug.LogFormat(@"[Profile Revealer] Website {0} did not respond with a JSON array at “KtaneModules” key.", url, http.responseCode);
 				yield break;
 			}
 
-			foreach (JObject module in allModules)
-            {
-                var status = new List<string>() { };
-				if (module["BossStatus"] is JValue bossStatusV && bossStatusV.Value is string bossStatus)
-				{
+			foreach (JObject module in allModules) {
+				var status = new List<string>() { };
+				if (module["BossStatus"] is JValue bossStatusV && bossStatusV.Value is string bossStatus) {
 					if (bossStatus.Equals("FullBoss", StringComparison.InvariantCultureIgnoreCase))
-					{
 						status.Add("Full Boss");
-					}
-					if (bossStatus.Equals("SemiBoss", StringComparison.InvariantCultureIgnoreCase))
-					{
+					else if (bossStatus.Equals("SemiBoss", StringComparison.InvariantCultureIgnoreCase))
 						status.Add("Semi Boss");
-					}
 				}
-                if (module["IsFullBoss"] is JValue isFullBossV && isFullBossV.Value is bool isFullBoss && isFullBoss == true)
-                {
-                    status.Add("Full Boss");
-                }
-                if (module["IsSemiBoss"] is JValue isSemiBossV && isSemiBossV.Value is bool isSemiBoss && isSemiBoss == true)
-                {
-                    status.Add("Semi-Boss");
-                }
-                if (module["IsPseudoNeedy"] is JValue isPseudoNeedyV && isPseudoNeedyV.Value is bool isPsudoNeedy && isPsudoNeedy == true)
-                {
-                    status.Add("Pseudo-Needy");
-                }
-                if (module["Quirks"] is JValue quirksV && quirksV.Value is string quirks)
-                {
-					foreach (var quirk0 in quirks.Split(','))
-					{
+				if (module["IsFullBoss"] is JValue isFullBossV && isFullBossV.Value is bool isFullBoss && isFullBoss == true)
+					status.Add("Full Boss");
+				if (module["IsSemiBoss"] is JValue isSemiBossV && isSemiBossV.Value is bool isSemiBoss && isSemiBoss == true)
+					status.Add("Semi-Boss");
+				if (module["IsPseudoNeedy"] is JValue isPseudoNeedyV && isPseudoNeedyV.Value is bool isPsudoNeedy && isPsudoNeedy == true)
+					status.Add("Pseudo-Needy");
+				if (module["Quirks"] is JValue quirksV && quirksV.Value is string quirks) {
+					foreach (var quirk0 in quirks.Split(',')) {
 						var quirk = quirk0.Trim();
-						if (quirk.Equals("PseudoNeedy", StringComparison.InvariantCultureIgnoreCase))
-						{
+						if (quirk.Equals("PseudoNeedy", StringComparison.InvariantCultureIgnoreCase)) {
 							status.Add("Pseudo Needy");
-						}
-						else if (quirk.Equals("TimeDependent", StringComparison.InvariantCultureIgnoreCase))
-						{
+						} else if (quirk.Equals("TimeDependent", StringComparison.InvariantCultureIgnoreCase)) {
 							status.Add("Time-Dependent");
 						}
 					}
-                }
+				}
 
-				if(status.Count > 0)
-				{
-					if (module["DisplayName"] is JValue displayNameV && displayNameV.Value is string displayName)
-					{
+				if (status.Count > 0) {
+					if (module["DisplayName"] is JValue displayNameV && displayNameV.Value is string displayName) {
 						this.bossStatus.Add(displayName, status);
 						Debug.LogFormat(@"[Profile Revealer] Setting boss status of {0} to {1}.", displayName, string.Join(", ", status.ToArray()));
-					} else if (module["Name"] is JValue nameV && nameV.Value is string name)
-					{
+					} else if (module["Name"] is JValue nameV && nameV.Value is string name) {
 						this.bossStatus.Add(name, status);
 						Debug.LogFormat(@"[Profile Revealer] Setting boss status of {0} to {1}.", name, string.Join(", ", status.ToArray()));
 
 					}
-
 				}
 			}
 		}
@@ -417,8 +392,7 @@ namespace ProfileRevealerLib {
 						popup.Module = component.transform;
 						++moduleIndex;
 						if (this.config.ShowModuleNames) popup.moduleName = component.GetModuleDisplayName();
-						if (this.config.ShowBossStatus && this.bossStatus.ContainsKey(component.GetModuleDisplayName()))
-						{
+						if (this.config.ShowBossStatus && this.bossStatus.ContainsKey(component.GetModuleDisplayName())) {
 							popup.bossStatus = this.bossStatus[component.GetModuleDisplayName()];
 						}
 
@@ -486,8 +460,7 @@ namespace ProfileRevealerLib {
 					var popup = Instantiate(this.PopupPrefab, transform, false);
 					popup.Module = transform;
 					if (this.config.ShowModuleNames) popup.moduleName = transform.name;
-					if (this.config.ShowBossStatus && this.bossStatus.ContainsKey(transform.name))
-					{
+					if (this.config.ShowBossStatus && this.bossStatus.ContainsKey(transform.name)) {
 						popup.bossStatus = this.bossStatus[transform.name];
 					}
 					popup.Delay = 2;
