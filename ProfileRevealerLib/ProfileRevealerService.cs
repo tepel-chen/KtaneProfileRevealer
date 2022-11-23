@@ -256,7 +256,12 @@ namespace ProfileRevealerLib {
 		}
 #endif
 
-		private bool InNonFreeplayMission => GameplayState.MissionToLoad != FreeplayMissionGenerator.FREEPLAY_MISSION_ID && GameplayState.MissionToLoad != ModMission.CUSTOM_MISSION_ID;
+		private bool InNonFreeplayMission
+#if DEBUG
+			=> false;
+#else
+			=> GameplayState.MissionToLoad != FreeplayMissionGenerator.FREEPLAY_MISSION_ID && GameplayState.MissionToLoad != ModMission.CUSTOM_MISSION_ID;
+#endif
 
 		private void RefreshConfig() {
 			bool rewriteFile;
