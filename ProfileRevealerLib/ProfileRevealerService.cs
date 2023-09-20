@@ -3,23 +3,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json.Linq;
 
 #if !DEBUG
-using UnityEngine.SceneManagement;
-
 using Assets.Scripts.Missions;
-using Assets.Scripts.Services;
-
-using InControl;
 #endif
 
 namespace ProfileRevealerLib {
@@ -33,6 +26,7 @@ namespace ProfileRevealerLib {
 		private KMGamepad KMGamepad;
 		private Config config;
 #pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
+
 		private KMGameInfo.State gameState;
 		private ModulePopup? highlightedModulePopup;
 		private ModulePopup? focusedModulePopup;
@@ -68,7 +62,6 @@ namespace ProfileRevealerLib {
 
 #if !DEBUG
 			this.KMGameInfo.OnStateChange = this.KMGameInfo_OnStateChange;
-			UnityEngine.SceneManagement.SceneManager.sceneLoaded += this.SceneManager_sceneLoaded;
 			if (KTInputManager.Instance.IsMotionControlMode())
 				this.StartCoroutine(this.SearchForVrControllersCoroutine());
 #endif
@@ -224,12 +217,17 @@ namespace ProfileRevealerLib {
 
 #if !DEBUG
 		private void KMGameInfo_OnStateChange(KMGameInfo.State state) {
+			Debug.Log($"[Profile Revealer] State change: {state}");
 			if (state == KMGameInfo.State.Gameplay && this.gameState != KMGameInfo.State.Gameplay) {
 				this.KMModSettings.RefreshSettings();
 				this.RefreshConfig();
 				// Enabling Show Module Names is considered an advantageous feature, so disable records in that case.
 				// This code is based on the Tweaks mod.
-				if (this.config.IsAdvantagusFeatures) LeaderboardController.DisableLeaderboards();
+				if (this.config.IsAdvantageousFeatures) {
+					LeaderboardController.DisableLeaderboards();
+					if (GameplayState.MissionToLoad != FreeplayMissionGenerator.FREEPLAY_MISSION_ID && GameplayState.MissionToLoad != ModMission.CUSTOM_MISSION_ID)
+						this.StartCoroutine(this.ShowAdvantageousWarning());
+				}
 				this.StartCoroutine(this.CheckForBombs());
 			} else if (state == KMGameInfo.State.Setup) {
 				this.popups.Clear();
@@ -245,14 +243,6 @@ namespace ProfileRevealerLib {
 				}
 			}
 			this.gameState = state;
-		}
-
-		private void SceneManager_sceneLoaded(Scene scene, LoadSceneMode loadSceneMode) {
-			if (scene.name == "gameplayLoadingScene") {
-				if (this.config.IsAdvantagusFeatures && GameplayState.MissionToLoad != FreeplayMissionGenerator.FREEPLAY_MISSION_ID &&
-					GameplayState.MissionToLoad != ModMission.CUSTOM_MISSION_ID)
-					this.StartCoroutine(this.ShowAdvantageousWarning());
-			}
 		}
 #endif
 
@@ -286,7 +276,7 @@ namespace ProfileRevealerLib {
 				new JsonSerializer() { Formatting = Formatting.Indented }.Serialize(writer2, this.config);
 			}
 			// Respect Disable Advantageous Features in Tweaks.
-			if (this.config.IsAdvantagusFeatures && this.tweaksService != null) {
+			if (this.config.IsAdvantageousFeatures && this.tweaksService != null) {
 				if (this.tweaksSettingsField == null)
 					this.tweaksSettingsField = this.tweaksService.GetType().GetField("settings", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 				var tweaksSettings = this.tweaksSettingsField.GetValue(null);
@@ -348,7 +338,7 @@ namespace ProfileRevealerLib {
 			var isFactoryRoom = bombs[0].GetComponent<Selectable>().Parent.name.StartsWith("FactoryRoom");
 
 			// Disable leaderboards (needs to be done now to override Tweaks).
-			if (this.config.IsAdvantagusFeatures) {
+			if (this.config.IsAdvantageousFeatures) {
 				Assets.Scripts.Stats.StatsManager.Instance.DisableStatChanges = true;
 				Assets.Scripts.Records.RecordManager.Instance.DisableBestRecords = true;
 			}

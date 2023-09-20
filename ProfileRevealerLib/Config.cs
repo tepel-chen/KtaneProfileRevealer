@@ -65,14 +65,7 @@ namespace ProfileRevealerLib {
 		}
 
 		[JsonIgnore]
-		public bool IsAdvantagusFeatures
-		{
-			get
-			{
-				return this.ShowModuleNames || this.ShowBossStatus;
-
-			}
-		}
+		public bool IsAdvantageousFeatures => this.ShowModuleNames || this.ShowBossStatus;
 
 		internal static readonly Dictionary<string, object>[] TweaksEditorSettings = new[] {
 			new Dictionary<string, object> {
