@@ -83,7 +83,6 @@
     <Compile Include="ModulePopup.cs" />
     <Compile Include="ProfileRevealerService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SteamFilterService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
