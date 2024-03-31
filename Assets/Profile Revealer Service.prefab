@@ -54,10 +54,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4141954527066680}
   - component: {fileID: 114949349549481766}
-  - component: {fileID: 114256058979433768}
   - component: {fileID: 114807003793558702}
   - component: {fileID: 114887141543855098}
   - component: {fileID: 114410048241445114}
+  - component: {fileID: 114919251328882110}
   m_Layer: 0
   m_Name: Profile Revealer Service
   m_TagString: Untagged
@@ -96,20 +96,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114256058979433768
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1934000079390978}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1315881595, guid: cb72d33074053b84da0cdb9a6934e36b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  PopupPrefab: {fileID: 114027580534942416, guid: c2ee161662904a042ba75c131afceaf8,
-    type: 2}
-  AdvantageousWarningCanvas: {fileID: 1659459234547506}
 --- !u!114 &114349797063813832
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -193,6 +179,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Settings: 
   SettingsPath: 
+--- !u!114 &114919251328882110
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1934000079390978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1315881595, guid: af4b301030238cb41b77d51d64b9c219, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PopupPrefab: {fileID: 114352457862650210, guid: c2ee161662904a042ba75c131afceaf8,
+    type: 2}
+  AdvantageousWarningCanvas: {fileID: 1659459234547506}
 --- !u!114 &114949349549481766
 MonoBehaviour:
   m_ObjectHideFlags: 1
